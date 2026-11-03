@@ -2,11 +2,10 @@
   "name": "zzopricebot-cron",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": { "node": ">=20" },
   "scripts": {
     "start": "node src/main.js",
     "dry-run": "DRY_RUN=1 node src/main.js",
-    "preview": "node scripts/preview.js",
     "test": "node --test"
   }
 }
