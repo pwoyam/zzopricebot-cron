@@ -1,31 +1,12 @@
-// ارز دیجیتال (شناسه‌ها از CoinGecko)
-export const CRYPTO = [
-  { id: 'bitcoin', symbol: '₿', name: 'بیت‌کوین' },
-  { id: 'ethereum', symbol: 'Ξ', name: 'اتریوم' },
-];
+export const TZ = 'Asia/Tehran';
+export const MAX_STALE_HOURS = Number(process.env.MAX_STALE_HOURS ?? 6);
 
-// ترتیب نمایش همین ترتیب است. نمادها از oanor (GET /v1/symbols).
-export const GOLD_ROWS = [
-  ['coin_emami', 'سکه امامی'],
-  ['coin_bahar', 'سکه بهار آزادی'],
-  ['half_coin', 'نیم‌سکه'],
-  ['quarter_coin', 'ربع‌سکه'],
-  ['gerami_coin', 'سکه گرمی'],
-  ['gram_18k', 'طلای ۱۸ عیار (هر گرم)'],
-  ['gram_24k', 'طلای ۲۴ عیار (هر گرم)'],
-  ['mesghal', 'مثقال طلا'],
-  ['ounce', 'اونس جهانی طلا'],
-];
+// ترتیب نمایش در پیام مهم است
+export const METAL_GOLD  = ['geram18', 'abshode'];
+export const METAL_COINS = ['seke_emami', 'seke_bahar', 'seke_nim', 'seke_rob', 'seke_grami'];
+export const METAL_OUNCE = 'ounce';
 
-export const DOLLAR_ROWS = [['usd', 'دلار آمریکا']];
+export const FX_MAIN   = 'USD';
+export const FX_OTHERS = ['EUR', 'GBP', 'AED', 'TRY', 'CNY', 'CAD'];
 
-// برای نمایش ارز بیشتر، نماد را از این لیست به CURRENCY_ROWS اضافه کنید:
-// chf (فرانک سوئیس)، aud (دلار استرالیا)، jpy (ین، ۱۰۰ واحد)، rub (روبل)
-export const CURRENCY_ROWS = [
-  ['eur', 'یورو'],
-  ['gbp', 'پوند انگلیس'],
-  ['aed', 'درهم امارات'],
-  ['try', 'لیر ترکیه'],
-  ['cny', 'یوان چین'],
-  ['cad', 'دلار کانادا'],
-];
+export const CRYPTO_CODES = ['BTC', 'ETH', 'USDT'];

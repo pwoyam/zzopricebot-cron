@@ -1,47 +1,74 @@
-import test from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildMessage } from '../src/format.js';
-import { fixtureMarket } from '../fixtures/load.js';
 
-const now = new Date('2026-11-03T12:00:00Z');
-const crypto = [{ symbol: '₿', name: 'بیت‌کوین', usd: 76967, change24h: 1.234 }];
+const TS = 1793704920;
+const GOLD   = { ts: TS, current: 25612910, yesterdayClose: 25774500, todayClose: 25625100 };
+const FX     = { ts: TS, items: [
+  { code: 'USD', name: 'دلار آمریکا', buy: 272150, sell: 274900, ts: TS },
+  { code: 'EUR', name: 'یورو',       buy: 304200, sell: 307300, ts: TS },
+  { code: 'GBP', name: 'پوند انگلیس', buy: 359500, sell: 365000, ts: TS },
+]};
+const METALS = { ts: TS, items: [
+  { code: 'geram18',    name: 'گرم طلای ۱۸ عیار',   price: 25612910, change_pct: 0.63,   ts: TS },
+  { code: 'abshode',    name: 'طلای آبشده (مثقال)', price: 110950000, change_pct: 0.63,  ts: TS },
+  { code: 'seke_emami', name: 'سکه امامی',          price: 262500000, change_pct: 0.38,  ts: TS },
+  { code: 'ounce',      name: 'انس جهانی طلا',      price: 3907.9,    change_pct: null,  ts: TS },
+]};
+const CRYPTO = { ts: TS, items: [
+  { code: 'BTC',  name: 'بیت‌کوین', latest: 210569989750, dayChange: -0.9,  ts: TS },
+  { code: 'ETH',  name: 'اتریوم',   latest: 6203626280,   dayChange: -0.74, ts: TS },
+  { code: 'USDT', name: 'تتر',      latest: 2735590,      dayChange: -0.05, ts: TS },
+]};
 
-test('orders sections: gold, dollar, other currencies, crypto', () => {
-  const text = buildMessage({ market: fixtureMarket(), crypto }, now);
-  const at = (s) => text.indexOf(s);
-  assert.ok(at('🥇') !== -1);
-  assert.ok(at('🥇') < at('💵'));
-  assert.ok(at('💵') < at('💱'));
-  assert.ok(at('💱') < at('🪙'));
+const build = () => buildMessage({ gold: GOLD, fx: FX, metals: METALS, crypto: CRYPTO });
+
+test('all four sections render', () => {
+  const out = build();
+  assert.match(out, /🥇.*طلا و سکه/);
+  assert.match(out, /💵.*دلار/);
+  assert.match(out, /💱.*ارزهای مهم/);
+  assert.match(out, /🪙.*ارز دیجیتال/);
 });
 
-test('formats toman, ounce in USD and signed change', () => {
-  const text = buildMessage({ market: fixtureMarket(), crypto }, now);
-  assert.match(text, /سکه امامی: <b>179,480,000 تومان<\/b> 🟢 \+0\.01%/);
-  assert.match(text, /طلای ۱۸ عیار \(هر گرم\): <b>17,924,900 تومان<\/b> 🔴 -0\.06%/);
-  assert.match(text, /اونس جهانی طلا: <b>\$4,260\.40<\/b> 🔴 -4\.43%/);
-  assert.match(text, /دلار آمریکا: <b>175,805 تومان<\/b> 🟢 \+1\.83%/);
-  assert.match(text, /<b>\$76,967<\/b> 🟢 \+1\.23%/);
+test('toman prices use thousand separators', () => {
+  assert.match(build(), /سکه امامی: <b>262,500,000 تومان<\/b>/);
 });
 
-test('omits the change when the source has none', () => {
-  const text = buildMessage({ market: fixtureMarket(), crypto }, now);
-  const line = text.split('\n').find((l) => l.includes('ربع'));
-  assert.ok(line);
-  assert.doesNotMatch(line, /🟢|🔴/);
+test('crypto in USD uses the USD sell rate', () => {
+  assert.match(build(), /بیت‌کوین: <b>\$76,\d{3}<\/b>/);
 });
 
-test('skips configured symbols that are missing from the response', () => {
-  const usd = { symbol: 'usd', unit: 'IRR', close: 1758050, close_toman: 175805, change_pct: 1.83, date_jalali: '1405/03/20' };
-  const market = { gold: new Map(), currencies: new Map([['usd', usd]]) };
-  const text = buildMessage({ market, crypto: null }, now);
-  assert.match(text, /دلار آمریکا/);
-  assert.doesNotMatch(text, /🥇/);
-  assert.doesNotMatch(text, /💱/);
+test('USDT is shown in toman', () => {
+  assert.match(build(), /تتر: <b>273,559 تومان<\/b>/);
 });
 
-test('works without a crypto section and shows the market date', () => {
-  const text = buildMessage({ market: fixtureMarket(), crypto: null }, now);
-  assert.doesNotMatch(text, /🪙/);
-  assert.match(text, /📅 .*1405\/03\/20/);
+test('ounces are in USD with one decimal', () => {
+  assert.match(build(), /انس جهانی طلا: <b>\$3,907\.9<\/b>/);
+});
+
+test('positive change shows green up arrow', () => {
+  assert.match(build(), /گرم طلای ۱۸ عیار:.*🟢 \+0\.63%/);
+});
+
+test('negative change shows red down arrow', () => {
+  assert.match(build(), /بیت‌کوین:.*🔴 -0\.90%/);
+});
+
+test('missing crypto section is omitted', () => {
+  const out = buildMessage({ gold: GOLD, fx: FX, metals: METALS, crypto: { items: [], ts: null } });
+  assert.doesNotMatch(out, /🪙/);
+});
+
+test('escapes HTML in names', () => {
+  const evil = { ...FX, items: [{ code: 'USD', name: '<script>x</script>', buy: 1, sell: 2, ts: TS }] };
+  const out = buildMessage({ gold: GOLD, fx: evil, metals: { items: [], ts: null }, crypto: { items: [], ts: null } });
+  assert.doesNotMatch(out, /<script>/);
+  assert.match(out, /&lt;script&gt;/);
+});
+
+test('footer shows jalali time and tehran label', () => {
+  const out = build();
+  assert.match(out, /🕐/);
+  assert.match(out, /به وقت تهران/);
 });

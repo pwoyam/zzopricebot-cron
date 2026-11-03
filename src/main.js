@@ -1,6 +1,5 @@
-import { CRYPTO } from './config.js';
-import { fetchMarket } from './sources/oanor.js';
-import { fetchCryptoPrices } from './sources/crypto.js';
+import { MAX_STALE_HOURS } from './config.js';
+import { fetchGold, fetchFx, fetchMetals, fetchCrypto } from './sources/tala24.js';
 import { buildMessage } from './format.js';
 import { sendMessage, editMessage, pinMessage, TelegramError } from './telegram.js';
 import { loadState, saveState } from './state.js';
@@ -8,37 +7,48 @@ import { loadState, saveState } from './state.js';
 const dryRun = process.env.DRY_RUN === '1';
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHANNEL_ID;
-const oanorKey = process.env.OANOR_API_KEY;
+
+function assertFresh(ts, label) {
+  if (!ts) throw new Error(`${label}: no timestamp in response`);
+  const ageHours = (Date.now() / 1000 - ts) / 3600;
+  if (ageHours > MAX_STALE_HOURS) {
+    throw new Error(
+      `${label}: stale data (${ageHours.toFixed(1)}h old, limit ${MAX_STALE_HOURS}h)`,
+    );
+  }
+}
 
 async function safePin(token, chatId, messageId) {
   try {
     await pinMessage(token, chatId, messageId);
     console.log('Message pinned.');
   } catch (err) {
-    // Pin شدن شکست بخورد، نباید کل آپدیت قیمت خراب شود.
     console.warn(`Pin failed: ${err.message}`);
   }
 }
 
 async function main() {
-  if (!oanorKey) throw new Error('OANOR_API_KEY must be set');
-
+  if (!process.env.TALA24_TOKEN) {
+    throw new Error('TALA24_TOKEN must be set');
+  }
   if (!dryRun && (!token || !chatId)) {
     throw new Error('TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID must be set');
   }
 
-  // منبع اصلی ضروری است: اگر خطا بدهد، پیام قبلی کانال دست‌نخورده می‌ماند.
-  const market = await fetchMarket(oanorKey);
+  // همه‌ی چهار بخش ضروری هستند: اگر یکی بیاید یا کهنه باشد، پست نمی‌کنیم.
+  const [gold, fx, metals, crypto] = await Promise.all([
+    fetchGold(),
+    fetchFx(),
+    fetchMetals(),
+    fetchCrypto(),
+  ]);
 
-  // ارز دیجیتال اختیاری است: اگر نیامد، فقط همان بخش حذف می‌شود.
-  let crypto = null;
-  try {
-    crypto = await fetchCryptoPrices(CRYPTO);
-  } catch (err) {
-    console.warn(`Crypto section skipped: ${err.message}`);
-  }
+  assertFresh(gold.ts, 'gold');
+  assertFresh(fx.ts, 'fx');
+  assertFresh(metals.ts, 'metals');
+  assertFresh(crypto.ts, 'crypto');
 
-  const text = buildMessage({ market, crypto });
+  const text = buildMessage({ gold, fx, metals, crypto });
 
   if (dryRun) {
     console.log(text);
@@ -56,11 +66,12 @@ async function main() {
     } catch (err) {
       if (err instanceof TelegramError && /message is not modified/i.test(err.description)) {
         console.log('Message unchanged.');
-        await safePin(token, chatId, state.messageId);
         return;
       }
-
-      if (err instanceof TelegramError && /message to edit not found|MESSAGE_ID_INVALID/i.test(err.description)) {
+      if (
+        err instanceof TelegramError &&
+        /message to edit not found|MESSAGE_ID_INVALID/i.test(err.description)
+      ) {
         console.warn('Old message is gone; sending a new one.');
       } else {
         throw err;
