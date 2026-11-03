@@ -1,4 +1,5 @@
-import { ASSETS } from './config.js';
+import { CRYPTO } from './config.js';
+import { fetchMarket } from './sources/oanor.js';
 import { fetchCryptoPrices } from './sources/crypto.js';
 import { buildMessage } from './format.js';
 import { sendMessage, editMessage, TelegramError } from './telegram.js';
@@ -7,17 +8,30 @@ import { loadState, saveState } from './state.js';
 const dryRun = process.env.DRY_RUN === '1';
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHANNEL_ID;
+const oanorKey = process.env.OANOR_API_KEY;
 
 async function main() {
-  const prices = await fetchCryptoPrices(ASSETS);
-  const text = buildMessage(prices);
+  if (!oanorKey) throw new Error('OANOR_API_KEY must be set');
+  if (!dryRun && (!token || !chatId)) {
+    throw new Error('TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID must be set');
+  }
+
+  // منبع اصلی ضروری است: اگر خطا بدهد، پیام قبلی کانال دست‌نخورده می‌ماند.
+  const market = await fetchMarket(oanorKey);
+
+  // ارز دیجیتال اختیاری است: اگر نیامد، فقط همان بخش حذف می‌شود.
+  let crypto = null;
+  try {
+    crypto = await fetchCryptoPrices(CRYPTO);
+  } catch (err) {
+    console.warn(`Crypto section skipped: ${err.message}`);
+  }
+
+  const text = buildMessage({ market, crypto });
 
   if (dryRun) {
     console.log(text);
     return;
-  }
-  if (!token || !chatId) {
-    throw new Error('TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID must be set');
   }
 
   const state = await loadState();

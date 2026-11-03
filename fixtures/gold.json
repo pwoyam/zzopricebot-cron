@@ -1,0 +1,18 @@
+{
+  "data": {
+    "gold": [
+      { "symbol": "ounce", "name": "Gold Ounce (global)", "unit": "USD", "category": "gold", "close": 4260.4, "change": -180.73, "change_pct": -4.43, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "gram_18k", "name": "Gold 18k (gram)", "unit": "IRR", "category": "gold", "close": 179249000, "change": -108000, "change_pct": -0.06, "close_toman": 17924900, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "gram_24k", "name": "Gold 24k (gram)", "unit": "IRR", "category": "gold", "close": 238996000, "change": -145000, "change_pct": -0.06, "close_toman": 23899600, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "mesghal", "name": "Gold Mesghal", "unit": "IRR", "category": "gold", "close": 771450000, "change": -120000, "change_pct": -0.02, "close_toman": 77145000, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "coin_emami", "name": "Emami Gold Coin", "unit": "IRR", "category": "coin", "close": 1794800000, "change": 250000, "change_pct": 0.01, "close_toman": 179480000, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "coin_bahar", "name": "Bahar Azadi Gold Coin", "unit": "IRR", "category": "coin", "close": 1750200000, "change": 50000, "close_toman": 175020000, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "half_coin", "name": "Half Gold Coin", "unit": "IRR", "category": "coin", "close": 920000000, "change": -5000000, "change_pct": -0.54, "close_toman": 92000000, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "quarter_coin", "name": "Quarter Gold Coin", "unit": "IRR", "category": "coin", "close": 515000000, "close_toman": 51500000, "date": "2026/06/10", "date_jalali": "1405/03/20" },
+      { "symbol": "gerami_coin", "name": "Gerami Gold Coin", "unit": "IRR", "category": "coin", "close": 270000000, "change": -10000000, "change_pct": -3.7, "close_toman": 27000000, "date": "2026/06/10", "date_jalali": "1405/03/20" }
+    ],
+    "count": 9,
+    "source": "tgju.org"
+  },
+  "success": true
+}

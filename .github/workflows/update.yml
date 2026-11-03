@@ -2,7 +2,9 @@ name: Update prices
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # ساعتی (دقیقه ۷، نه سر ساعت: ازدحام GitHub کمتر است).
+    # بعد از تأیید سقف واقعی oanor می‌شود به "7,37 * * * *" (هر ۳۰ دقیقه) برگرداند.
+    - cron: "7 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -27,6 +29,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          OANOR_API_KEY: ${{ secrets.OANOR_API_KEY }}
         run: node src/main.js
 
       - name: Save state if it changed

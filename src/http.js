@@ -1,19 +1,32 @@
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function fetchJson(url, { attempts = 3, timeoutMs = 15000 } = {}) {
+export class HttpError extends Error {
+  constructor(host, status) {
+    super(`HTTP ${status} from ${host}`);
+    this.status = status;
+  }
+}
+
+// هدرها (مثل کلید API) هرگز چاپ نمی‌شوند؛ فقط نام میزبان و کد وضعیت در خطا می‌آید.
+export async function fetchJson(url, { headers = {}, attempts = 3, timeoutMs = 15000 } = {}) {
+  const host = new URL(url).host;
   let lastError;
   for (let i = 1; i <= attempts; i++) {
     try {
       const res = await fetch(url, {
-        headers: { accept: 'application/json', 'user-agent': 'zzopricebot/1.0' },
+        headers: { accept: 'application/json', 'user-agent': 'zzopricebot/1.0', ...headers },
         signal: AbortSignal.timeout(timeoutMs),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new HttpError(host, res.status);
       return await res.json();
     } catch (err) {
       lastError = err;
-      if (i < attempts) await sleep(2000 * i);
+      // خطای ۴xx با تکرار درست نمی‌شود (مثل کلید اشتباه یا اتمام سهمیه).
+      const retryable = !(err instanceof HttpError) || err.status >= 500;
+      if (!retryable || i === attempts) break;
+      await sleep(2000 * i);
     }
   }
-  throw new Error(`Request failed after ${attempts} attempts (${new URL(url).host}): ${lastError.message}`);
+  if (lastError instanceof HttpError) throw lastError;
+  throw new Error(`Request to ${host} failed: ${lastError.name}`);
 }

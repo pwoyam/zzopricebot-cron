@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/main.js",
     "dry-run": "DRY_RUN=1 node src/main.js",
+    "preview": "node scripts/preview.js",
     "test": "node --test"
   }
 }
