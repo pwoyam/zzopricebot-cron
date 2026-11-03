@@ -1,0 +1,11 @@
+{
+  "name": "zzopricebot-cron",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/main.js",
+    "dry-run": "DRY_RUN=1 node src/main.js",
+    "test": "node --test"
+  }
+}
