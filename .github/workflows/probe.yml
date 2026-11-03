@@ -1,0 +1,35 @@
+name: Probe sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "URLs to test, one per line"
+        required: false
+        default: |
+          https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
+          https://api.oanor.com/irr-api/v1/meta
+          https://brsapi.ir/
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe URLs from the GitHub runner
+        env:
+          URLS: ${{ inputs.urls }}
+        run: |
+          while IFS= read -r url; do
+            url="$(printf '%s' "$url" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+            [ -z "$url" ] && continue
+            echo "=== $url"
+            rm -f /tmp/body
+            code="$(curl -sS -m 20 -A 'Mozilla/5.0' -o /tmp/body -w '%{http_code} in %{time_total}s' "$url" || echo 'curl failed')"
+            echo "status: $code"
+            head -c 300 /tmp/body 2>/dev/null || true
+            echo
+          done <<< "$URLS"
