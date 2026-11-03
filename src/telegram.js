@@ -19,10 +19,17 @@ async function call(token, method, params) {
   } catch (err) {
     throw new Error(`Telegram ${method} network error: ${err.name}`);
   }
+
   const data = await res.json().catch(() => null);
+
   if (!data?.ok) {
-    throw new TelegramError(method, data?.description ?? `HTTP ${res.status}`, data?.error_code ?? res.status);
+    throw new TelegramError(
+      method,
+      data?.description ?? `HTTP ${res.status}`,
+      data?.error_code ?? res.status,
+    );
   }
+
   return data.result;
 }
 
@@ -30,4 +37,15 @@ export const sendMessage = (token, chatId, text) =>
   call(token, 'sendMessage', { chat_id: chatId, text, parse_mode: 'HTML' });
 
 export const editMessage = (token, chatId, messageId, text) =>
-  call(token, 'editMessageText', { chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML' });
+  call(token, 'editMessageText', {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: 'HTML',
+  });
+
+export const pinMessage = (token, chatId, messageId) =>
+  call(token, 'pinChatMessage', {
+    chat_id: chatId,
+    message_id: messageId,
+  });

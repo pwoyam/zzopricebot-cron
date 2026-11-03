@@ -2,9 +2,8 @@ name: Update prices
 
 on:
   schedule:
-    # ساعتی (دقیقه ۷، نه سر ساعت: ازدحام GitHub کمتر است).
-    # بعد از تأیید سقف واقعی oanor می‌شود به "7,37 * * * *" (هر ۳۰ دقیقه) برگرداند.
-    - cron: "7 * * * *"
+    # هر ۳۰ دقیقه: دقیقه ۷ و ۳۷ هر ساعت
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:
